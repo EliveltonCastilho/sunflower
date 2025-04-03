@@ -49,6 +49,7 @@ DB_PORT=3306
 DB_USER=usuario
 DB_PASSWORD=senha
 DB_NAME=nome_do_banco
+```
 
 📡 Endpoints da API
 GET /api/items
