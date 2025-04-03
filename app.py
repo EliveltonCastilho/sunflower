@@ -6,6 +6,7 @@ import pytz
 from flask import Flask, render_template, request, jsonify, send_from_directory
 from dotenv import load_dotenv
 from datetime import datetime, timedelta
+from flask_cors import CORS  # <--- IMPORTANTE!
 
 # Load environment variables
 load_dotenv()
@@ -18,6 +19,7 @@ DB_NAME = os.getenv('DB_NAME', 'sunflower_trade')
 
 # Initialize Flask app
 app = Flask(__name__)
+CORS(app)  # <--- ATIVA CORS para todos os domínios
 
 # Configurar pasta de imagens estáticas
 @app.route('/images/<path:filename>')
@@ -65,8 +67,6 @@ def get_item_price_history(item_name, days=30):
     
     try:
         cursor = connection.cursor(dictionary=True)
-        
-        # Use local system time directly
         end_date = datetime.now()
         start_date = end_date - timedelta(days=days)
         
@@ -89,10 +89,8 @@ def get_item_price_history(item_name, days=30):
         cursor.execute(query, (item_name, start_date, end_date))
         results = cursor.fetchall()
         
-        # Convert to pandas DataFrame for easier manipulation
         if results:
             df = pd.DataFrame(results)
-            # Format the timestamp for JSON serialization
             df['timestamp'] = df['timestamp'].apply(lambda x: x.strftime('%Y-%m-%d %H:%M:%S'))
             return df.to_dict('records')
         else:
@@ -128,23 +126,17 @@ def api_price_history():
     if data is None:
         return jsonify({'error': 'Failed to fetch price history'}), 500
     
-    # Format decimal values to 4 decimal places for consistency and add 10% discount price
     for item in data:
-        # Format timestamp to Brazilian format (DD/MM/YYYY HH:MM:SS)
         if 'timestamp' in item:
             dt = datetime.strptime(item['timestamp'], '%Y-%m-%d %H:%M:%S')
             item['timestamp'] = dt.strftime('%d/%m/%Y %H:%M:%S')
-            
-        # Format p2p price and add discounted price
+        
         if item['p2p_price'] is not None:
             item['p2p_price'] = float(format(item['p2p_price'], '.4f'))
-            # Add a new field for price minus 10%
             item['p2p_discount'] = float(format(item['p2p_price'] * 0.9, '.4f'))
         else:
             item['p2p_discount'] = None
-            
-        # Remove seq and ge prices (we'll keep them in the response but they won't be used in frontend)
-        # This approach maintains backward compatibility
+        
         if item['seq_price'] is not None:
             item['seq_price'] = float(format(item['seq_price'], '.4f'))
         if item['ge_price'] is not None:
