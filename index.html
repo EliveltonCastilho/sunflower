@@ -353,7 +353,7 @@
             document.getElementById('sparklines-grid').innerHTML = '';
             
             // Usar todos os itens disponíveis em vez de limitar a 12
-            const itemsToShow = allItems;
+            const itemsToShow = allItems.slice(0, 16);
             
             // Criar um grid de mini gráficos
             itemsToShow.forEach(item => {
