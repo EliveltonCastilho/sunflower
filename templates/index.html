@@ -286,7 +286,7 @@
             }
             
             // Carregar todos os itens disponíveis
-            fetch('/api/items')
+            fetch('https://api-flask-y3l3.onrender.com/api/items')
                 .then(response => response.json())
                 .then(items => {
                     allItems = items;
@@ -362,7 +362,7 @@
             
             // Buscar dados para cada item (1 dia)
             const promises = itemsToShow.map(item => 
-                fetch(`/api/price_history?item=${encodeURIComponent(item)}&days=1`)
+                fetch(`https://api-flask-y3l3.onrender.com/api/price_history?item=${encodeURIComponent(item)}&days=1`)
                     .then(response => response.json())
                     .then(data => ({ item, data }))
             );
@@ -627,7 +627,7 @@
             }
             
             // Fetch price history data
-            fetch(`/api/price_history?item=${encodeURIComponent(item)}&days=${days}`)
+            fetch(`https://api-flask-y3l3.onrender.com/api/price_history?item=${encodeURIComponent(item)}&days=${days}`)
                 .then(response => {
                     if (!response.ok) {
                         throw new Error('Erro ao buscar dados');
