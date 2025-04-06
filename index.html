@@ -347,12 +347,12 @@
                 });
         });
         
-        // Carregar mini gráficos para todos os itens
+        // Carregar mini gráficos para todos os itens, um por vez
         function loadSparklines() {
             document.getElementById('sparklines-loading').style.display = 'block';
             document.getElementById('sparklines-grid').innerHTML = '';
             
-            // Usar todos os itens disponíveis em vez de limitar a 12
+            // Usar todos os itens disponíveis
             const itemsToShow = allItems;
             
             // Criar um grid de mini gráficos
@@ -360,27 +360,61 @@
                 createSparklineCard(item);
             });
             
-            // Buscar dados para cada item (1 dia)
-            const promises = itemsToShow.map(item => 
+            // Contador para acompanhar o progresso
+            let loadedCount = 0;
+            const totalItems = itemsToShow.length;
+            
+            // Elemento para mostrar o progresso
+            const loadingElement = document.getElementById('sparklines-loading');
+            loadingElement.innerHTML = `
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Carregando...</span>
+                </div>
+                <p class="mt-2">Carregando mini gráficos... (0/${totalItems})</p>
+            `;
+            
+            // Função para carregar um item por vez
+            function loadNextItem(index) {
+                if (index >= itemsToShow.length) {
+                    // Todos os itens foram carregados
+                    document.getElementById('sparklines-loading').style.display = 'none';
+                    return;
+                }
+                
+                const item = itemsToShow[index];
+                
+                // Atualizar mensagem de carregamento
+                loadingElement.innerHTML = `
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Carregando...</span>
+                    </div>
+                    <p class="mt-2">Carregando mini gráficos... (${index+1}/${totalItems})</p>
+                    <p class="small text-muted">Carregando: ${item}</p>
+                `;
+                
+                // Buscar dados para o item atual
                 fetch(`https://api-flask-y3l3.onrender.com/api/price_history?item=${encodeURIComponent(item)}&days=1`)
                     .then(response => response.json())
-                    .then(data => ({ item, data }))
-            );
-            
-            Promise.all(promises)
-                .then(results => {
-                    results.forEach(({ item, data }) => {
+                    .then(data => {
                         if (data.length > 0) {
                             renderSparkline(item, data);
                         }
+                        
+                        // Incrementar contador
+                        loadedCount++;
+                        
+                        // Carregar próximo item após um pequeno delay
+                        setTimeout(() => loadNextItem(index + 1), 100);
+                    })
+                    .catch(error => {
+                        console.error(`Erro ao carregar mini gráfico para ${item}:`, error);
+                        // Continuar para o próximo item mesmo em caso de erro
+                        setTimeout(() => loadNextItem(index + 1), 100);
                     });
-                })
-                .catch(error => {
-                    console.error('Erro ao carregar mini gráficos:', error);
-                })
-                .finally(() => {
-                    document.getElementById('sparklines-loading').style.display = 'none';
-                });
+            }
+            
+            // Iniciar o carregamento sequencial
+            loadNextItem(0);
         }
         
         // Criar card para o mini gráfico

@@ -107,7 +107,8 @@ def get_item_price_history(item_name, days=30):
 @app.route('/')
 def index():
     items = get_all_items()
-    return render_template('index.html', items=items)
+    # Serve index.html from root directory instead of templates folder
+    return send_from_directory('.', 'index.html')
 
 @app.route('/api/items')
 def api_items():
