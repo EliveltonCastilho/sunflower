@@ -155,7 +155,7 @@
                             <select class="form-select" id="itemSelect">
                                 <option value="" selected disabled>Escolha um item...</option>
                                 {% for item in items %}
-                                <option value="{{ item }}" data-img="/images/{{ item|lower }}.png">{{ item }}</option>
+                                <option value="{{ item }}" data-img="images/{{ item|lower }}.png">{{ item }}</option>
                                 {% endfor %}
                             </select>
                         </div>
@@ -259,7 +259,10 @@
         // Initialize the page
         document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('noDataMessage').style.display = 'block';
-            document.getElementById('updateBtn').addEventListener('click', updateChart);
+            document.getElementById('updateBtn').addEventListener('click', function() {
+                // Quando o botão de atualizar é clicado, não pular o recarregamento dos mini gráficos
+                updateChart(false);
+            });
             document.getElementById('logScaleToggle').addEventListener('change', updateChartScale);
             
             // Adicionar imagens ao combobox
@@ -307,7 +310,7 @@
                         tempDiv.style.display = 'flex';
                         tempDiv.style.alignItems = 'center';
                         
-                        const imgPath = `/images/${item.toLowerCase()}.png`;
+                        const imgPath = `images/${item.toLowerCase()}.png`;
                         
                         // Verificar se a imagem existe (primeiro PNG, depois WebP)
                         const img = new Image();
@@ -321,7 +324,7 @@
                         };
                         img.onerror = function() {
                             // Se a imagem PNG não existir, tentar WebP
-                            const webpImgPath = `/images/${item.toLowerCase()}.webp`;
+                            const webpImgPath = `images/${item.toLowerCase()}.webp`;
                             const webpImg = new Image();
                             webpImg.src = webpImgPath;
                             webpImg.onload = function() {
@@ -428,7 +431,8 @@
             card.dataset.item = item;
             card.addEventListener('click', function() {
                 document.getElementById('itemSelect').value = item;
-                updateChart();
+                // Passar true para skipSparklineReload para evitar recarregar os mini gráficos
+                updateChart(true);
             });
             
             const cardBody = document.createElement('div');
@@ -440,13 +444,13 @@
             
             // Criar apenas uma imagem por container
             const img = document.createElement('img');
-            img.src = `/images/${item.toLowerCase()}.png`;
+            img.src = `images/${item.toLowerCase()}.png`;
             img.alt = item;
             img.style.width = '32px';
             img.style.height = '32px';
             img.onerror = function() {
                 // Try WebP format if PNG fails
-                this.src = `/images/${item.toLowerCase()}.webp`;
+                this.src = `images/${item.toLowerCase()}.webp`;
                 this.onerror = function() {
                     this.style.display = 'none';
                 };
@@ -639,7 +643,7 @@
         }
 
         // Fetch data and update chart
-        function updateChart() {
+        function updateChart(skipSparklineReload = false) {
             const itemSelect = document.getElementById('itemSelect');
             const timeRange = document.getElementById('timeRange');
             
@@ -655,8 +659,9 @@
             document.getElementById('loading').style.display = 'block';
             document.getElementById('noDataMessage').style.display = 'none';
             
-            // Se o período for diário (1 dia), recarregar os mini gráficos
-            if (days === '1') {
+            // Se o período for diário (1 dia) e não estamos pulando o recarregamento dos mini gráficos,
+            // recarregar os mini gráficos
+            if (days === '1' && !skipSparklineReload) {
                 loadSparklines();
             }
             
@@ -725,12 +730,12 @@
                 if (priceChangeInfo && priceChangeValue) {
                     // Definir a imagem do item (tentar PNG primeiro, depois WebP)
                     if (itemImage) {
-                        const imgPath = `/images/${itemName.toLowerCase()}.png`;
+                        const imgPath = `images/${itemName.toLowerCase()}.png`;
                         itemImage.src = imgPath;
                         itemImage.alt = itemName;
                         itemImage.onerror = function() {
                             // Try WebP format if PNG fails
-                            this.src = `/images/${itemName.toLowerCase()}.webp`;
+                            this.src = `images/${itemName.toLowerCase()}.webp`;
                             this.onerror = function() {
                                 this.style.display = 'none';
                             };
